@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koo Mean AI Passport</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+    font-family: 'Inter', sans-serif;
+  }
+  .lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1em;
+  }
+  .line {
+    font-size: clamp(3rem, 14vw, 9rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+    border-right: 0.06em solid transparent;
+  }
+  .line.last.typing { border-right-color: #fff; }
+  @keyframes blink { 50% { border-color: transparent; } }
+  .line.last.done {
+    border-right-color: #fff;
+    animation: blink 0.7s step-end infinite;
+  }
+</style>
+</head>
+<body>
+  <div class="lines">
+    <div class="line">Koo Mean</div>
+    <div class="line">AI Passport</div>
+    <div class="line last">Coming Soon</div>
+  </div>
+
+<script>
+  const lines = Array.from(document.querySelectorAll('.line'));
+
+  // Measure natural width of each line
+  function widths() {
+    return lines.map(el => {
+      const prev = el.style.width;
+      el.style.width = 'max-content';
+      const w = el.getBoundingClientRect().width;
+      el.style.width = prev;
+      return w;
+    });
+  }
+
+  function typeLine(el, targetW, perCharMs) {
+    return new Promise(resolve => {
+      const isLast = el.classList.contains('last');
+      el.style.borderRightColor = '#fff';
+      if (isLast) el.classList.add('typing');
+
+      const steps = Math.max(el.textContent.length, 1);
+      const duration = steps * perCharMs;
+      const start = performance.now();
+
+      function frame(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const stepped = Math.floor(t * steps) / steps;
+        el.style.width = (targetW * stepped) + 'px';
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          el.style.width = targetW + 'px';
+          if (isLast) {
+            el.classList.remove('typing');
+            el.classList.add('done');
+          } else {
+            el.style.borderRightColor = 'transparent';
+          }
+          resolve();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function run() {
+    await document.fonts.ready;
+    const w = widths();
+    await wait(300);
+    await typeLine(lines[0], w[0], 150);
+    await wait(250);
+    await typeLine(lines[1], w[1], 200);
+    await wait(250);
+    await typeLine(lines[2], w[2], 180);
+  }
+
+  run();
+</script>
+</body>
+</html>
